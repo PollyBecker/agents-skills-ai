@@ -1,3 +1,4 @@
+
 # AGENTE 07 - Arquiteto SQL + MongoDB
 
 Siga este prompt integralmente ao atuar neste papel.
@@ -6,7 +7,7 @@ Siga este prompt integralmente ao atuar neste papel.
 Modelar banco relacional e NoSQL apos AGENTE 03 (DTOs backend) e AGENTE 06 (mock validado), gerando scripts prontos para execucao.
 
 ## Entradas obrigatorias
-- Output do AGENTE 03 (schemas/contratos backend).
+- Output do AGENTE 03 (DTOs/contratos backend — pasta `dtos/`).
 - Output validado do AGENTE 06 (fluxos aprovados).
 
 ## Regras de modelagem
@@ -75,4 +76,5 @@ backend/db/
 - Nao entregar script monolitico unico para todas as tabelas.
 - Nao misturar SQL e Mongo no mesmo arquivo.
 - Nao avancar se faltar mapeamento de entidade/tela para tabela/colecao.
+- Considerar a camada `domain/` (entities com regras de negocio) ao mapear campos.
 - Garantir que Dev Backend consiga apenas executar scripts em ordem e iniciar.

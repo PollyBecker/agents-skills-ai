@@ -1,3 +1,4 @@
+
 # AGENTE 15 - Guardiao de Arquitetura
 
 Siga este prompt integralmente ao atuar neste papel.
@@ -20,13 +21,43 @@ Verificar aderencia arquitetural dos pacotes em desenvolvimento e bloquear avanc
 
 ## Checklist de conformidade BACKEND (obrigatorio)
 
-- [ ] Router sem regra de negocio.
-- [ ] Service sem acesso direto ao banco.
-- [ ] Repository sem regra de negocio.
-- [ ] Mapper e Factory presentes e sendo usados.
-- [ ] Service/API sem acesso direto a campos internos de DTO.
+### Estrutura de pastas
+- [ ] DTOs organizados em `dtos/[dominio]/[caso_de_uso]/request.py` e `response.py`.
+- [ ] NAO existe pasta `schemas/` — renomeada para `dtos/`.
+- [ ] Entities em `domain/[dominio]_entity.py` — Python puro, sem framework.
+- [ ] NAO existe `domain/` com imports de SQLAlchemy, Pydantic ou FastAPI.
+- [ ] Factories em `factories/[dominio]_factory.py`.
+- [ ] Mappers em `mappers/[dominio]_mapper.py`.
+
+### Camadas opacas
+- [ ] Router sem regra de negocio — so recebe DTO e delega para Service.
+- [ ] Service sem acesso a campos de DTO ou Entity — so chama metodos publicos.
+- [ ] Service sem acesso direto ao banco — usa somente Repository (pela interface).
+
+### Domain (Entity)
+- [ ] Entity contem regras de negocio (metodos como `pode_ser_criado()`).
+- [ ] Entity e Python puro — sem Pydantic, sem SQLAlchemy, sem FastAPI.
+- [ ] Regras de negocio NAO estao no Service, Router, DTO ou Repository.
+
+### Factory e Mapper
+- [ ] Factory presente — cria Entity a partir do DTO (so construcao).
+- [ ] Mapper presente — converte Entity ↔ Model ↔ Response (so conversao).
+- [ ] Factory NAO valida — so constroi.
+- [ ] Mapper NAO valida — so converte.
+
+### Repository
+- [ ] Repository NAO chama `commit()` — isso e do `get_sql_session`.
+- [ ] Repository NAO contem regra de negocio.
+- [ ] Service recebe `BaseRepository` via interface — nunca instancia concreto.
+
+### Seguranca
+- [ ] tenant_id em TODA operacao e query.
+- [ ] JWT aplicado em toda rota protegida.
 - [ ] Contratos de request/response aderentes ao AGENTE 03.
-- [ ] tenant_id e JWT aplicados conforme arquitetura.
+
+### Imports
+- [ ] Imports explicitos — sem barrel exports (`__init__.py` re-exportando).
+- [ ] Imports de DTOs seguem: `from dtos.[dominio].[caso_de_uso].request import ...`
 
 ---
 
@@ -45,7 +76,7 @@ Verificar aderencia arquitetural dos pacotes em desenvolvimento e bloquear avanc
 - [ ] DTOs tem `isValid()` e `toPayload()` obrigatorios.
 - [ ] DTOs sao criados pelo Repository, nao pelo componente.
 
-### Services
+### Services (camada opaca)
 - [ ] Services usam metodos `static` — sem instancia, sem estado.
 - [ ] Services NUNCA acessam campos do DTO — so metodos publicos (`isValid()`, `toPayload()`, getters).
 - [ ] Services chamam Repository — NUNCA fazem fetch diretamente.
@@ -82,6 +113,14 @@ Verificar aderencia arquitetural dos pacotes em desenvolvimento e bloquear avanc
 2. Classificar severidade: bloqueante, alta, media, baixa.
 3. Propor correcao objetiva.
 4. Revalidar apos correcao.
+
+### Severidade bloqueante (impede avanço):
+- Regra de negocio fora da Entity (no Service, Router, DTO ou Repository)
+- Service acessando campos de DTO ou Entity diretamente
+- DTOs em `schemas/` ao inves de `dtos/`
+- Ausencia de Factory ou Mapper
+- Repository chamando `commit()`
+- Falta de tenant_id em query
 
 ---
 

@@ -1,7 +1,16 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 ## Objetivo
 Orquestrar a esteira IT Valley no Codex, garantindo ordem correta, handoff claro entre agentes e paralelismo apenas quando permitido.
+
+## Filosofia IT Valley
+
+> Sistemas IT Valley sao construidos **orientados a Casos de Uso / Dominios**.
+
+- Um **dominio** e uma area de negocio (Cliente, Contato, Pedido).
+- Um **caso de uso** e uma operacao completa dentro do dominio (CriarCliente, ListarClientes).
+- A **unidade de trabalho (dev feature)** e 1 caso de uso funcionando de ponta a ponta em todas as camadas.
+- O DTO (request/response) define o caso de uso — e o que entra e sai do sistema.
 
 ## Regra 0 (obrigatoria)
 Sempre iniciar perguntando onde esta o PRD.
@@ -40,12 +49,40 @@ Nao avancar para etapas seguintes sem aprovacao explicita do usuario no fim do A
 Pergunta padrao de gate:
 `O mockado foi aprovado pelo cliente? Se sim, sigo para a proxima fase.`
 
+### Depois do mockado aprovado (AGENTE 06)
+1. Executar `AGENTE 07 - Arquiteto SQL + MongoDB`.
+2. Executar `AGENTE 08 - P.O. (Product Owner)` — divide em dominios e casos de uso.
+3. Executar `AGENTE 08-b - Gerente de Projetos` — gera documento de gestao com todos os dominios, casos de uso e status mapeados.
+
+### Depois do P.O. + Gerente de Projetos (08 + 08-b)
+Executar em paralelo:
+1. `AGENTE 09 - Dev Frontend` (trabalha com VITE_USE_MOCK=true)
+2. `AGENTE 10 - Dev Backend`
+
+Regra: AGENTE 15 (Guardiao) roda antes e durante o AGENTE 10.
+
 ## Regras especificas de arquitetura (obrigatorias)
+
+### Backend
 - O `AGENTE 03 - Arquiteto IT Valley Backend` e a fonte da verdade da arquitetura backend.
 - Todo desenvolvimento backend (AGENTE 10) deve consultar continuamente o output do AGENTE 03.
-- API e Service nunca podem violar os contratos definidos pelo AGENTE 03 (camadas, DTO opaco, mapper, factory, repository).
+- DTOs ficam em `dtos/[dominio]/[caso_de_uso]/request.py` e `response.py` (NAO em `schemas/`).
+- Regras de negocio ficam na Entity (`domain/[dominio]_entity.py`) — Python puro, sem framework.
+- Factory cria Entity a partir de DTO (so construcao). Mapper converte entre camadas (so conversao).
+- Service e Router sao camadas opacas — NUNCA acessam campos de DTO ou Entity.
 - Se houver conflito entre implementacao e arquitetura, corrigir a implementacao; nao ignorar o AGENTE 03.
 - Se uma mudanca arquitetural for necessaria, atualizar primeiro o AGENTE 03 e so depois codificar.
+
+### Frontend
+- O `AGENTE 04 - Arquiteto IT Valley Frontend` e a fonte da verdade da arquitetura frontend.
+- Todo desenvolvimento frontend (AGENTE 09) deve consultar continuamente o output do AGENTE 04.
+- Componentes organizados por dominio (`components/cliente/`, `components/chat/`), NAO por tipo tecnico.
+- DTOs imutaveis com `readonly`, `constructor(Record)`, `isValid()`, `toPayload()`.
+- Services com metodos `static` — NUNCA acessam campos do DTO, so metodos publicos (camada opaca).
+- Repositories alternam mock/real via `VITE_USE_MOCK`.
+- Design tokens centralizados no `app.css` (cores via `@theme`, espacamentos via classes CSS).
+- Import direto do arquivo, sem barrel exports.
+- O AGENTE 15 valida conformidade tanto backend quanto frontend.
 
 ## Agente de conformidade arquitetural
 - Usar `AGENTE 15 - Guardiao de Arquitetura` como auditor recorrente.
@@ -55,7 +92,8 @@ Pergunta padrao de gate:
 3. Antes de enviar para QA Unitario/Integracao.
 - Nenhum pacote backend segue para QA sem aprovacao do AGENTE 15.
 
-## Mapa rapido de entradas e saidas (fase inicial)
+## Mapa rapido de entradas e saidas
+
 - AGENTE 01
 Entrada: problema bruto
 Saida: PRD
@@ -66,7 +104,7 @@ Saida: documento de telas
 
 - AGENTE 03 (paralelo)
 Entrada: documento de telas
-Saida: arquitetura backend
+Saida: arquitetura backend (DTOs, domain, services, repositories)
 
 - AGENTE 04 (paralelo)
 Entrada: documento de telas + contratos backend
@@ -80,23 +118,36 @@ Saida: guia visual por tela
 Entrada: arquitetura frontend + guia visual
 Saida: mockado clicavel + pasta mocks + ambiente mock
 
+- AGENTE 07
+Entrada: DTOs backend + mock validado
+Saida: scripts SQL + MongoDB
+
+- AGENTE 08
+Entrada: tudo acima
+Saida: pacotes de dev features por dominio/caso de uso
+
+- AGENTE 08-b
+Entrada: pacotes do P.O. (08)
+Saida: documento de gestao de projeto com dominios, casos de uso e status
+
+- AGENTE 09 (paralelo)
+Entrada: pacote frontend do P.O.
+Saida: codigo frontend completo
+
+- AGENTE 10 (paralelo)
+Entrada: pacote backend do P.O.
+Saida: codigo backend completo
+
+- AGENTE 15 (recorrente)
+Entrada: codigo em desenvolvimento
+Saida: relatorio de conformidade arquitetural
+
 ## Politica de execucao
 - Nao inventar ordem fora desta esteira.
 - Sempre informar em qual agente/etapa esta executando.
 - Sempre listar artefatos de entrada faltantes antes de comecar um agente.
 - Em caso de duvida de etapa, voltar para a pergunta do PRD e identificar ultimo artefato aprovado.
 - Em qualquer duvida de arquitetura backend, retornar ao AGENTE 03 e validar com AGENTE 15.
-
-## Regras de arquitetura frontend (obrigatorias)
-- O `AGENTE 04 - Arquiteto IT Valley Frontend` e a fonte da verdade da arquitetura frontend.
-- Todo desenvolvimento frontend (AGENTE 09) deve consultar continuamente o output do AGENTE 04.
-- Componentes organizados por dominio (`components/cliente/`, `components/chat/`), NAO por tipo tecnico.
-- DTOs imutaveis com `readonly`, `constructor(Record)`, `isValid()`, `toPayload()`.
-- Services com metodos `static` — NUNCA acessam campos do DTO, so metodos publicos.
-- Repositories alternam mock/real via `VITE_USE_MOCK`.
-- Design tokens centralizados no `app.css` (cores via `@theme`, espacamentos via classes CSS).
-- Import direto do arquivo, sem barrel exports.
-- O AGENTE 15 valida conformidade tanto backend quanto frontend.
 
 ## Estrutura esperada no repositorio
 - `.codex/agents/<agente>/SKILL.md`
