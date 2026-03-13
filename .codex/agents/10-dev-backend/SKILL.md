@@ -11,8 +11,8 @@ Siga este prompt integralmente ao atuar neste papel.
 - O AGENTE 03 e fonte de verdade do backend.
 - Durante toda a codificacao, consultar AGENTE 03 a cada endpoint/modulo implementado.
 - Mapper e Factory sao obrigatorios conforme AGENTE 03.
-- Service e API sao camadas opacas — nao acessam campos internos de DTO ou Entity.
-- Entity (domain/) contem TODAS as regras de negocio — Python puro, sem framework.
+- Service e API sao camadas opacas — nao acessam campos internos de DTO.
+- Factory cria objetos e contem regras de negocio (validacoes, invariantes).
 - Repository NUNCA chama `commit()` — o commit e feito automaticamente pelo `get_sql_session`.
 - Service recebe `BaseRepository` (interface abstrata) — nunca instancia repositorio diretamente.
 - Qualquer divergencia bloqueia entrega ate conformidade arquitetural.
@@ -34,21 +34,20 @@ Cada dev feature e 1 caso de uso completo (1 par request/response funcionando de
 
 ## Arquitetura Obrigatoria
 
-### Estrutura de pastas
+### Estrutura de pastas (SEM pasta app/)
 ```
 backend/
+  main.py
   dtos/
     [dominio]/
       [caso_de_uso]/
         request.py              <- 1 classe Pydantic (o que entra)
         response.py             <- 1 classe Pydantic (o que sai)
       base.py                   <- campos compartilhados
-  domain/
-    [dominio]_entity.py         <- regras de negocio (Python puro)
   factories/
-    [dominio]_factory.py        <- DTO -> Entity
+    [dominio]_factory.py        <- criacao + regras de negocio
   mappers/
-    [dominio]_mapper.py         <- Entity <-> Model <-> Response
+    [dominio]_mapper.py         <- Model <-> Response (so conversao)
   services/
     [dominio]_service.py        <- orquestracao (camada opaca)
   routers/
@@ -71,11 +70,11 @@ backend/
 
 ### Fluxo completo de um caso de uso
 ```
-Request JSON → DTO (request.py) → Factory → Entity (valida) → Service (pergunta) → Mapper → Repository → Mapper → Response (response.py)
+Request JSON → DTO (request.py) → Factory (cria + valida) → Service (orquestra) → Repository (persiste) → Mapper (converte) → Response (response.py)
 ```
 
 ### Camadas opacas (NUNCA mudam quando campo muda)
-- **Service** — so chama metodos publicos: `entity.pode_ser_criado()`, `dto.is_valid()`
+- **Service** — so chama Factory e Mapper, nao conhece campos
 - **Router** — recebe DTO, delega para Service, retorna response
 
 ### Exemplo Completo
@@ -103,76 +102,38 @@ class CriarClienteResponse(BaseModel):
 ```
 
 ```python
-# domain/cliente_entity.py
-from datetime import date
-
-class ClienteEntity:
-    def __init__(self, nome: str, email: str, cpf: str, tenant_id: str):
-        self.nome = nome
-        self.email = email
-        self.cpf = cpf
-        self.tenant_id = tenant_id
-        self.id = None
-        self.created_at = None
-
-    def pode_ser_criado(self) -> bool:
-        return self._cpf_valido()
-
-    def _cpf_valido(self) -> bool:
-        return len(self.cpf) == 11
-```
-
-```python
-# factories/cliente_factory.py
-from domain.cliente_entity import ClienteEntity
-from dtos.cliente.criar_cliente.request import CriarClienteRequest
+# factories/cliente_factory.py — cria objetos + regras de negocio
+from models.cliente import ClienteModel
 
 class ClienteFactory:
     @staticmethod
-    def to_entity(dto: CriarClienteRequest, tenant_id: str) -> ClienteEntity:
-        return ClienteEntity(
+    def to_model(dto, tenant_id: str) -> ClienteModel:
+        if not ClienteFactory._cpf_valido(dto.cpf):
+            raise ValueError("CPF invalido")
+        return ClienteModel(
             nome=dto.nome,
             email=dto.email,
             cpf=dto.cpf,
             tenant_id=tenant_id
         )
+
+    @staticmethod
+    def _cpf_valido(cpf: str) -> bool:
+        return len(cpf) == 11
 ```
 
 ```python
-# mappers/cliente_mapper.py
-from domain.cliente_entity import ClienteEntity
-from models.cliente import ClienteModel
+# mappers/cliente_mapper.py — so conversao
 from dtos.cliente.criar_cliente.response import CriarClienteResponse
 
 class ClienteMapper:
     @staticmethod
-    def entity_to_model(entity: ClienteEntity) -> ClienteModel:
-        return ClienteModel(
-            nome=entity.nome,
-            email=entity.email,
-            cpf=entity.cpf,
-            tenant_id=entity.tenant_id
-        )
-
-    @staticmethod
-    def model_to_entity(model: ClienteModel) -> ClienteEntity:
-        entity = ClienteEntity(
+    def to_response(model) -> CriarClienteResponse:
+        return CriarClienteResponse(
+            id=model.id,
             nome=model.nome,
             email=model.email,
-            cpf=model.cpf,
-            tenant_id=model.tenant_id
-        )
-        entity.id = model.id
-        entity.created_at = model.created_at
-        return entity
-
-    @staticmethod
-    def entity_to_response(entity: ClienteEntity) -> CriarClienteResponse:
-        return CriarClienteResponse(
-            id=entity.id,
-            nome=entity.nome,
-            email=entity.email,
-            created_at=entity.created_at
+            created_at=model.created_at
         )
 ```
 
@@ -186,13 +147,9 @@ class ClienteService:
         self.repo = repo
 
     async def criar(self, dto, tenant_id: str):
-        entity = ClienteFactory.to_entity(dto, tenant_id)
-        if not entity.pode_ser_criado():
-            raise ValueError("Regras de negocio nao atendidas")
-        model = ClienteMapper.entity_to_model(entity)
+        model = ClienteFactory.to_model(dto, tenant_id)  # Factory cria + valida
         saved = await self.repo.create(model)
-        entity = ClienteMapper.model_to_entity(saved)
-        return ClienteMapper.entity_to_response(entity)
+        return ClienteMapper.to_response(saved)
 ```
 
 ```python
@@ -229,9 +186,8 @@ class ClientesRepository(BaseSQLRepository[ClienteModel]):
 
 ### Checklist por Dev Feature (caso de uso)
 - [ ] DTOs request/response criados em `dtos/[dominio]/[caso_de_uso]/`
-- [ ] Entity com regra de negocio em `domain/`
-- [ ] Factory cria Entity a partir do DTO
-- [ ] Mapper converte Entity ↔ Model ↔ Response
+- [ ] Factory cria objeto e aplica regras de negocio
+- [ ] Mapper converte Model → Response
 - [ ] Service orquestra sem acessar campos (camada opaca)
 - [ ] Router delega para Service sem logica (camada opaca)
 - [ ] Repository estende `BaseSQLRepository` ou `BaseMongoRepository`
@@ -240,6 +196,7 @@ class ClientesRepository(BaseSQLRepository[ClienteModel]):
 - [ ] JWT validado em toda rota protegida
 - [ ] Erros tratados com HTTPException adequado
 - [ ] Imports explicitos, sem barrel exports
+- [ ] SEM pasta `app/` — tudo na raiz de `backend/`
 
 ## Regras de Ouro
 - SEMPRE tenant_id em toda query
@@ -248,7 +205,7 @@ class ClientesRepository(BaseSQLRepository[ClienteModel]):
 - NUNCA acesso ao banco no Service
 - NUNCA `commit()` no Repository — isso e do `get_sql_session`
 - NUNCA instanciar repositorio concreto no Service — usar interface via Depends
-- SEMPRE regras de negocio na Entity (domain/)
-- SEMPRE Factory para criar Entity a partir de DTO
-- SEMPRE Mapper para converter entre camadas
+- SEMPRE regras de negocio na Factory
+- SEMPRE Mapper para converter Model → Response
+- SEM pasta `app/` no backend
 - Tratar todos os erros com HTTPException com status correto

@@ -77,11 +77,11 @@ Para CADA dominio, gerar uma secao completa:
 | 5  | InativarCliente     | PATCH /clientes/:id/inativar            | BuscarCliente     | ⬜   | ⬜    | ⬜ |             |
 
 ### Ordem de implementacao dentro do dominio
-1. CriarCliente (base — cria a Entity, Model, Repository)
+1. CriarCliente (base — cria o Model, Factory, Repository)
 2. ListarClientes (usa o que ja existe)
 3. BuscarCliente (usa o que ja existe)
 4. AtualizarCliente (adiciona metodo no Service/Router)
-5. InativarCliente (adiciona regra na Entity)
+5. InativarCliente (adiciona regra na Factory)
 
 ### Arquivos do dominio
 | Camada      | Arquivo                                    | Criado em      |
@@ -90,7 +90,7 @@ Para CADA dominio, gerar uma secao completa:
 | DTOs       | dtos/cliente/criar_cliente/response.py     | Dev Feature 1  |
 | DTOs       | dtos/cliente/listar_clientes/request.py    | Dev Feature 2  |
 | DTOs       | dtos/cliente/listar_clientes/response.py   | Dev Feature 2  |
-| Domain     | domain/cliente_entity.py                   | Dev Feature 1  |
+| Factory    | factories/cliente_factory.py                | Dev Feature 1  |
 | Factory    | factories/cliente_factory.py               | Dev Feature 1  |
 | Mapper     | mappers/cliente_mapper.py                  | Dev Feature 1  |
 | Service    | services/cliente_service.py                | Dev Feature 1  |

@@ -101,9 +101,8 @@ Ordem de implementacao:
 - `dtos/cliente/criar_cliente/response.py` — CriarClienteResponse
 
 **O que o dev ADICIONA:**
-- `domain/cliente_entity.py` — ClienteEntity + pode_ser_criado()
-- `factories/cliente_factory.py` — ClienteFactory.to_entity()
-- `mappers/cliente_mapper.py` — entity_to_model(), entity_to_response()
+- `factories/cliente_factory.py` — ClienteFactory.to_model() + regras de negocio
+- `mappers/cliente_mapper.py` — to_response()
 - `models/cliente.py` — ClienteModel
 - `services/cliente_service.py` — criar()
 - `routers/cliente.py` — POST /clientes

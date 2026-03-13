@@ -67,9 +67,10 @@ Regra: AGENTE 15 (Guardiao) roda antes e durante o AGENTE 10.
 - O `AGENTE 03 - Arquiteto IT Valley Backend` e a fonte da verdade da arquitetura backend.
 - Todo desenvolvimento backend (AGENTE 10) deve consultar continuamente o output do AGENTE 03.
 - DTOs ficam em `dtos/[dominio]/[caso_de_uso]/request.py` e `response.py` (NAO em `schemas/`).
-- Regras de negocio ficam na Entity (`domain/[dominio]_entity.py`) — Python puro, sem framework.
-- Factory cria Entity a partir de DTO (so construcao). Mapper converte entre camadas (so conversao).
-- Service e Router sao camadas opacas — NUNCA acessam campos de DTO ou Entity.
+- Factory cria objetos e contem regras de negocio (validacoes, invariantes).
+- Mapper so converte entre camadas (so conversao).
+- Service e Router sao camadas opacas — NUNCA acessam campos de DTO.
+- Backend SEM pasta `app/` — tudo na raiz de `backend/`.
 - Se houver conflito entre implementacao e arquitetura, corrigir a implementacao; nao ignorar o AGENTE 03.
 - Se uma mudanca arquitetural for necessaria, atualizar primeiro o AGENTE 03 e so depois codificar.
 
@@ -104,7 +105,7 @@ Saida: documento de telas
 
 - AGENTE 03 (paralelo)
 Entrada: documento de telas
-Saida: arquitetura backend (DTOs, domain, services, repositories)
+Saida: arquitetura backend (DTOs, factories, services, repositories)
 
 - AGENTE 04 (paralelo)
 Entrada: documento de telas + contratos backend

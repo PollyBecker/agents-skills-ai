@@ -28,25 +28,22 @@ Verificar aderencia arquitetural dos pacotes em desenvolvimento e bloquear avanc
 ### Estrutura de pastas
 - [ ] DTOs organizados em `dtos/[dominio]/[caso_de_uso]/request.py` e `response.py`.
 - [ ] NAO existe pasta `schemas/` — renomeada para `dtos/`.
-- [ ] Entities em `domain/[dominio]_entity.py` — Python puro, sem framework.
-- [ ] NAO existe `domain/` com imports de SQLAlchemy, Pydantic ou FastAPI.
+- [ ] NAO existe pasta `app/` — backend na raiz de `backend/`.
 - [ ] Factories em `factories/[dominio]_factory.py`.
 - [ ] Mappers em `mappers/[dominio]_mapper.py`.
 
 ### Camadas opacas
 - [ ] Router sem regra de negocio — so recebe DTO e delega para Service.
-- [ ] Service sem acesso a campos de DTO ou Entity — so chama metodos publicos.
+- [ ] Service sem acesso a campos de DTO — so chama Factory e Mapper.
 - [ ] Service sem acesso direto ao banco — usa somente Repository (pela interface).
 
-### Domain (Entity)
-- [ ] Entity contem regras de negocio (metodos como `pode_ser_criado()`).
-- [ ] Entity e Python puro — sem Pydantic, sem SQLAlchemy, sem FastAPI.
+### Factory (regras de negocio)
+- [ ] Factory presente — cria objetos e contem regras de negocio.
 - [ ] Regras de negocio NAO estao no Service, Router, DTO ou Repository.
+- [ ] Regras de negocio estao na Factory.
 
-### Factory e Mapper
-- [ ] Factory presente — cria Entity a partir do DTO (so construcao).
-- [ ] Mapper presente — converte Entity ↔ Model ↔ Response (so conversao).
-- [ ] Factory NAO valida — so constroi.
+### Mapper
+- [ ] Mapper presente — converte Model ↔ Response (so conversao).
 - [ ] Mapper NAO valida — so converte.
 
 ### Repository
@@ -118,10 +115,11 @@ Verificar aderencia arquitetural dos pacotes em desenvolvimento e bloquear avanc
 3. Propor correcao objetiva.
 4. Revalidar apos correcao.
 
-### Severidade bloqueante (impede avanço):
-- Regra de negocio fora da Entity (no Service, Router, DTO ou Repository)
-- Service acessando campos de DTO ou Entity diretamente
+### Severidade bloqueante (impede avanco):
+- Regra de negocio fora da Factory (no Service, Router, DTO ou Repository)
+- Service acessando campos de DTO diretamente
 - DTOs em `schemas/` ao inves de `dtos/`
+- Pasta `app/` dentro de `backend/`
 - Ausencia de Factory ou Mapper
 - Repository chamando `commit()`
 - Falta de tenant_id em query

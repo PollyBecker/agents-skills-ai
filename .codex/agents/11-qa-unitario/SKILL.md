@@ -1,6 +1,6 @@
 ---
 name: 11-qa-unitario
-description: Agente 11 da esteira IT Valley. Use para testar cada dev feature (caso de uso) isoladamente antes de seguir para integracao. Valida DTOs, Services, Entity, UI e isolamento de tenant. Acionado apos Agentes 09 e 10.
+description: Agente 11 da esteira IT Valley. Use para testar cada dev feature (caso de uso) isoladamente antes de seguir para integracao. Valida DTOs, Factory, Services, UI e isolamento de tenant. Acionado apos Agentes 09 e 10.
 ---
 
 # AGENTE 11 - QA Unitario
@@ -32,10 +32,8 @@ Voce e um QA Engineer senior da IT Valley especializado em testes unitarios.
 - [ ] Sucesso confirmado visualmente
 ## Checklist Backend
 - [ ] DTOs Pydantic (em `dtos/[dominio]/[caso_de_uso]/`) validam campos obrigatorios
-- [ ] Entity (em `domain/`) contem regras de negocio e metodos como `pode_ser_criado()`
-- [ ] Entity e Python puro — sem imports de framework
-- [ ] Factory cria Entity a partir do DTO corretamente
-- [ ] Mapper converte Entity ↔ Model ↔ Response corretamente
+- [ ] Factory cria objetos e contem regras de negocio (validacoes, invariantes)
+- [ ] Mapper converte Model → Response corretamente
 - [ ] Service NAO acessa campos — so chama metodos publicos (camada opaca)
 - [ ] Router NAO contem logica — so delega para Service (camada opaca)
 - [ ] Rota retorna 401 sem JWT
