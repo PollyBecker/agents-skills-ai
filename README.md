@@ -32,4 +32,5 @@ Cada agente fica em uma pasta separada, incluindo os agentes opcionais.
 - `opc-a-ui-ux-opcional` - OPC-A - UI/UX (opcional)
 - `opc-b-mensageria-opcional` - OPC-B - Mensageria (opcional)
 - `opc-c-engenheiro-de-dados-plus-bi-opcional` - OPC-C - Engenheiro de Dados + BI (opcional)
+- `opc-d-deploy-azure-opcional` - OPC-D - Deploy Azure App Service (opcional)
 

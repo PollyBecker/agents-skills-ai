@@ -150,6 +150,18 @@ Saida: relatorio de conformidade arquitetural
 - Em caso de duvida de etapa, voltar para a pergunta do PRD e identificar ultimo artefato aprovado.
 - Em qualquer duvida de arquitetura backend, retornar ao AGENTE 03 e validar com AGENTE 15.
 
+## Agentes opcionais
+
+### OPC-D - Deploy Azure App Service (opcional)
+Quando usar: quando o usuario pedir para subir o sistema na nuvem.
+Pode ser acionado apos qualquer etapa de desenvolvimento ou QA.
+
+- Entrada: projeto compilando + repositorio no GitHub
+- Saida: App Service rodando em producao + deploy continuo ativo + email de notificacao
+
+Dados fixos: RG `rg-webapps`, Plan `app-n8n-itvalley`, nome `app-{nome-do-projeto}`.
+Obrigatorio: habilitar Basic Auth antes do publish profile, usar $env/dynamic/private.
+
 ## Estrutura esperada no repositorio
 - `.codex/agents/<agente>/SKILL.md`
 - `.claude/agents/<agente>/CLAUDE.md`

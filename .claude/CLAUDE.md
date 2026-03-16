@@ -27,6 +27,7 @@ Repositorio com agentes IT Valley em pastas individuais.
 - `opc-a-ui-ux-opcional`
 - `opc-b-mensageria-opcional`
 - `opc-c-engenheiro-de-dados-plus-bi-opcional`
+- `opc-d-deploy-azure-opcional`
 
 ## Filosofia IT Valley
 
